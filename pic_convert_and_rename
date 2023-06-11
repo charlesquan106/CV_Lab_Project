@@ -1,0 +1,93 @@
+from PIL import Image
+import os
+import pillow_heif
+import whatimage
+
+def pic_convert_heic_to_jpg(input_path, output_path):
+    # path
+    if os.path.isdir(input_path):
+        file_list = os.listdir(input_path)
+        for idx, file in enumerate(file_list):
+            sub_path = os.path.join(input_path, file)
+            pic_convert_heic_to_jpg(sub_path, output_path)        
+    # file
+    elif os.path.isfile(input_path):
+        with open(input_path, 'rb') as f:
+            file_data = f.read()
+            try:
+                fmt = whatimage.identify_image(file_data)
+                if fmt in ['heic']:
+                    # Read Picture
+                    heif_file = pillow_heif.read_heif(input_path)
+                    image = Image.frombytes(mode=heif_file.mode, size=heif_file.size, data=heif_file.data)
+                    # Save path and rename
+                    path, filename = os.path.split(input_path)
+                    name, ext = os.path.splitext(filename)
+                    file_path = os.path.join(output_path, '%s.jpg' % name)
+                    print(file_path)
+                    #image.thumbnail((189, 252))
+                    image.save(file_path, "JPEG")
+            except:
+                print('except')
+            
+    
+    else:
+        print(input_path + 'is error format!')
+    pass
+
+
+
+
+def rename_files(folder_path):
+    # 檢查輸入的資料夾路徑是否存在
+    if not os.path.isdir(folder_path):
+        print("資料夾路徑不存在")
+        return
+
+    # 獲取資料夾中的所有檔案名稱
+    file_list = os.listdir(folder_path)
+
+    # 計數器
+    count = 1
+
+    # 遍歷所有檔案
+    for file_name in file_list:
+        # 組合檔案的完整路徑
+        file_path = os.path.join(folder_path, file_name)
+
+        # 確認檔案是否為檔案（不包括資料夾）
+        if os.path.isfile(file_path):
+            # 提取原始檔案的副檔名
+            file_extension = os.path.splitext(file_name)[1]
+
+            # 生成新的檔案名稱，以數字開頭命名
+            new_file_name = str(count) + file_extension
+            new_file_path = os.path.join(folder_path, new_file_name)
+
+            try:
+                # 重新命名檔案
+                os.rename(file_path, new_file_path)
+                print(f"已重新命名檔案：{file_name} -> {new_file_name}")
+
+                # 更新計數器
+                count += 1
+
+            except Exception as e:
+                print(f"重新命名檔案時出錯：{file_name} -> {e}")
+
+
+def main():
+    output_path = r'D:\CV_Lab\Jia\face_pic\test_pic_JPG'
+    if os.path.exists(output_path) is False:
+        os.makedirs(output_path)
+        pass
+    input_path = r'D:\CV_Lab\Jia\face_pic\test_pic_HEIC'
+
+    pic_convert_heic_to_jpg(input_path, output_path)
+    rename_files(output_path)
+    pass
+
+
+if __name__ == '__main__':
+    main()
+    pass
